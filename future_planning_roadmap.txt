@@ -1,0 +1,45 @@
+ROADMAP & FUTURE PLANNING: BARGAINHUNTER B2B
+(Dokumen Panduan Untuk Tim Frontend & Tahap Pengembangan Selanjutnya)
+
+1. FASE 1: PENGEMBANGAN FRONTEND (HACKATHON FOCUS)
+Tim Frontend dapat langsung mulai membangun antarmuka pengguna (UI) modern yang terintegrasi dengan REST API Backend. 
+
+Prioritas Fitur UI/UX:
+A. Halaman Utama (Surveillance Dashboard)
+   - Form input yang elegan untuk memasukkan "Target URL" dan "Target Component".
+   - Desain "Bento Grid" atau "Enterprise Dashboard" untuk menampilkan hasil JSON.
+   - Indikator Status Real-Time: Saat tugas berjalan, tampilkan animasi progres berseri:
+     [Scraping Data...] -> [Analyzing Market...] -> [Generating Strategy...] -> [Critiquing...]
+     (Gunakan endpoint GET /api/v1/surveillance/task/{task_id} setiap 2 detik untuk animasi ini).
+
+B. Halaman Riwayat (Intelligence History)
+   - Tabel atau daftar kartu (cards) yang menampilkan seluruh riwayat tugas yang pernah dikerjakan.
+   - Gunakan endpoint GET /api/v1/surveillance/tasks.
+   - Tampilkan informasi ringkas: Tanggal, Nama Komponen, Harga Termurah, dan Keputusan Bisnis (contoh: label merah untuk "MARKETING_BLITZ", abu-abu untuk "MAINTAIN").
+
+C. Visualisasi Data
+   - Tampilkan informasi "Cheapest Product" dan "Best Rated Product" berdampingan.
+   - Tampilkan kotak "Business Strategy" yang menonjolkan rekomendasi dari agen AI.
+
+2. FASE 2: DEPLOYMENT & INFRASTRUKTUR (HACKATHON FINISHING)
+Sebelum penjurian, seluruh sistem harus berada di cloud (tidak lagi berjalan di localhost).
+
+- Frontend Deployment: Deploy aplikasi web (React/Next.js/Streamlit) ke layanan seperti Vercel, Netlify, atau Hugging Face Spaces.
+- Backend Deployment: Kontainerisasi FastAPI menggunakan Docker, lalu deploy ke Railway, Render, atau AWS EC2.
+- Database: Database MySQL Aiven dan memori vektor Pinecone sudah berada di cloud dan aman. Pastikan kredensial diatur dengan benar di Environment Variables server produksi.
+
+3. FASE 3: FITUR MASA DEPAN (POST-HACKATHON / KOMERSIALISASI)
+Jika proyek ini dilanjutkan menjadi produk Startup B2B sungguhan, berikut adalah peta jalan pengembangannya:
+
+A. Auto-Scheduler (Surveillance Otomatis)
+   - Menggunakan APScheduler atau Celery di Backend agar AI otomatis berjalan setiap tengah malam untuk memantau harga komponen kritis tanpa perlu diklik oleh pengguna.
+
+B. Multi-Marketplace Scraping
+   - Memperluas Scraper Node (Bright Data) agar tidak hanya mencari di satu e-commerce, tapi sekaligus membandingkan Tokopedia, Shopee, Alibaba, dan Amazon untuk mendapat pandangan supply chain global.
+
+C. Grafik Tren Harga (Price Trend Analytics)
+   - Karena semua hasil disimpan di MySQL, kita bisa melacak fluktuasi harga "ESP32-CAM" selama 6 bulan terakhir dan menampilkannya dalam grafik garis (Line Chart) di Frontend menggunakan Chart.js atau Recharts.
+
+D. Multi-Tenant Authentication (JWT)
+   - Menambahkan sistem login/register.
+   - Setiap perusahaan (tenant) memiliki riwayat intelijen, slack webhook, dan database pencariannya sendiri yang terisolasi.

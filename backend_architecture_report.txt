@@ -1,0 +1,77 @@
+BACKEND ARCHITECTURE & PROCESS REPORT: BARGAINHUNTER B2B
+
+1. RINGKASAN EKSEKUTIF (EXECUTIVE SUMMARY)
+BargainHunter B2B adalah sistem Intelijen Pasar (Market Intelligence) berbasis kecerdasan buatan (AI) yang dirancang untuk menganalisis data e-commerce secara real-time. Sistem ini secara spesifik ditujukan untuk tim Go-To-Market (GTM) dan Finansial dalam merancang strategi penetapan harga (pricing strategy) dan mendeteksi anomali harga dari kompetitor.
+
+2. ARSITEKTUR AI (THE LANGGRAPH ENGINE)
+Otak utama dari sistem ini bukanlah satu LLM biasa, melainkan sebuah Multi-Agent Swarm Architecture yang diorkestrasi menggunakan LangGraph. Proses berjalan secara otonom melalui 4 node agen yang memiliki tugas spesifik:
+
+ALUR GRAFIK:
+[User Request] -> [FastAPI] -> [MySQL: Task Created] -> [Background Execution]
+
+LangGraph AI Workflow:
+1. Scraper Node (Mengekstrak data via Bright Data)
+2. Analyzer Node (Analisis sentimen dan harga)
+3. Recommender Node (Menyusun strategi bisnis)
+4. Critique Node (Memvalidasi strategi)
+(Jika strategi ditolak oleh Critique Node, sistem akan berputar / loop kembali ke Recommender Node).
+
+Penyimpanan & Memori:
+- Pinecone Vector DB digunakan sebagai RAG (Memory) agar Recommender Node dapat mengingat sejarah masa lalu.
+
+3. ALUR PROSES LANGKAH-DEMI-LANGKAH (STEP-BY-STEP FLOW)
+
+Langkah 1: API Request & Initialization
+1. Pengguna (melalui UI Streamlit) mengirimkan HTTP POST ke endpoint /api/v1/surveillance/analyze dengan membawa target URL dan nama komponen.
+2. FastAPI menyimpan status awal tugas ke database MySQL (Aiven) sebagai 'pending' dan melempar proses berat ini ke Background Tasks agar UI tidak terhenti (freeze).
+
+Langkah 2: Scraper Node (Pengumpulan Data Ketat)
+3. Agen pertama aktif. Ia menyuntikkan nama komponen ke dalam prompt dan menggunakan integrasi Bright Data MCP untuk mengekstrak data dari URL e-commerce.
+4. Semantic Filtering: AI diinstruksikan dengan aturan ketat untuk membuang barang rongsokan (contoh: membedakan antara modul ESP32-CAM seharga Rp 120.000 dengan kabel/papan downloader seharga Rp 19.500). Hanya komponen murni yang diteruskan ke tahap selanjutnya.
+
+Langkah 3: Analyzer Node (Analisis Pasar)
+5. Menerima kumpulan produk bersih, LLM mencari produk termurah (Cheapest) dan produk berating tertinggi (Best Rated).
+6. Ia juga mendeteksi adanya Price Anomaly (apakah harga termurah ini merusak harga pasar?).
+
+Langkah 4: Recommender Node (RAG Memory Injection)
+7. Sebelum memberikan saran, agen ini akan terhubung ke Pinecone Vector Database untuk melakukan Similarity Search (RAG). Ia menarik ingatan strategis masa lalu tentang komponen tersebut.
+8. Berdasarkan analisis saat ini dan sejarah masa lalu, AI merumuskan strategi penentuan harga B2B yang mendetail dan komprehensif, serta menentukan keyword keputusan bisnis (misal: MARKETING_BLITZ atau ADJUST_PRICE).
+
+Langkah 5: Critique Node (The Self-Reflection Loop)
+9. Strategi dari Recommender tidak langsung diterima. Strategi ini masuk ke meja "Manajer AI" (Critique Node).
+10. Critique Node mengevaluasi strategi berdasarkan Aturan Bisnis Perusahaan: "Jangan pernah menurunkan harga tanpa ada anomali harga yang terkonfirmasi".
+11. Jika aturan dilanggar, LangGraph secara dinamis melakukan Loop (memutar kembali) data ke Recommender beserta teguran keras untuk memperbaiki strateginya. Loop ini dibatasi maksimal 3 kali agar tidak terjadi infinite loop.
+
+Langkah 6: Real-Time Streaming & Alerting
+12. Selama proses LangGraph berjalan dari Langkah 2 hingga 5, FastAPI memanfaatkan metode .astream() untuk memancarkan (stream) status setiap node secara real-time ke MySQL. 
+13. Hal ini memungkinkan frontend menampilkan animasi "Executing Scraper...", "Executing Critique..." secara langsung kepada pengguna.
+14. Setelah divalidasi, laporan intelijen dikirim ke Notifier Service (yang siap diteruskan ke webhook Slack/Discord tim GTM) dan diarsipkan kembali ke Pinecone untuk pembelajaran di masa depan.
+
+4. DOKUMENTASI ENDPOINT API (UNTUK TIM FRONTEND)
+
+Bagian ini memuat daftar endpoint yang dapat diakses oleh aplikasi Frontend untuk berinteraksi dengan AI Backend:
+
+A. MEMULAI TUGAS ANALISIS BARU
+- Endpoint: POST /api/v1/surveillance/analyze
+- Fungsi: Memicu agen AI untuk mulai mengekstrak dan menganalisis produk.
+- Request Body (JSON):
+  {
+    "target_url": "https://www.tokopedia.com/find/esp32",
+    "target_component": "ESP32"
+  }
+- Response (JSON): Mengembalikan 'task_id' (ID tugas) dan status 'pending'.
+
+B. CEK STATUS REAL-TIME & AMBIL HASIL
+- Endpoint: GET /api/v1/surveillance/task/{task_id}
+- Fungsi: Frontend harus melakukan polling ke endpoint ini (misal setiap 2 detik) untuk melihat progres AI.
+- Response (JSON):
+  {
+    "id": 1,
+    "status": "running_scraper", // Status berubah seiring waktu: pending -> running_scraper -> running_analyzer -> completed
+    "result_data": "{...}" // Berisi JSON data hasil analisis jika status sudah 'completed'
+  }
+
+C. MENGAMBIL RIWAYAT LAPORAN (DASHBOARD HISTORY)
+- Endpoint: GET /api/v1/surveillance/tasks?limit=50
+- Fungsi: Mengambil daftar 50 tugas (laporan intelijen) terakhir yang pernah dikerjakan oleh AI, diurutkan dari yang terbaru.
+- Response (JSON): Array dari objek tugas (sama seperti Response B). Sangat cocok untuk ditampilkan di halaman beranda / tabel riwayat.
