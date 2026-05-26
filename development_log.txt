@@ -5,3 +5,4 @@ Commit 4: setup: configure Pinecone vector store connection - 05/26/2026 09:58:0
 Commit 5: feat: build initial Bright Data scraper node - 05/26/2026 09:58:00
 Commit 6: fix: improve scraper JSON parsing and exception handling - 05/26/2026 09:58:01
 Commit 7: feat: implement Analyzer node for sentiment and price anomaly - 05/26/2026 09:58:01
+Commit 8: refactor: modularize LangGraph agents into separate files - 05/26/2026 09:58:01
