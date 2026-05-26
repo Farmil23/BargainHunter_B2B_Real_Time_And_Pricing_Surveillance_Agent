@@ -4,6 +4,8 @@ import logging
 
 from backend.app.core.config import settings
 from backend.app.api.routes import surveillance
+from backend.app.db.session import engine, Base
+from backend.app.models import domain
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -14,6 +16,9 @@ app = FastAPI(
     version=settings.VERSION,
     description="Backend API for Real-Time Market & Pricing Surveillance Agent"
 )
+
+# Auto-create database tables (Hibernate auto-update equivalent)
+Base.metadata.create_all(bind=engine)
 
 # CORS middleware
 app.add_middleware(
