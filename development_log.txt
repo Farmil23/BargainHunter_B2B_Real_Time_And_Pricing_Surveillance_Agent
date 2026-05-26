@@ -18,3 +18,4 @@ Commit 17: feat: build Streamlit dashboard prototype - 05/26/2026 09:58:07
 Commit 18: style: improve Streamlit UI formatting and data rendering - 05/26/2026 09:58:07
 Commit 19: feat: build Streamlit dashboard prototype - 05/26/2026 09:58:08
 Commit 20: style: improve Streamlit UI formatting and data rendering - 05/26/2026 09:58:08
+Commit 21: feat: add GET /tasks endpoint for frontend history dashboard - 05/26/2026 09:58:08
