@@ -27,3 +27,4 @@ Commit 26: fix: resolve edge cases with empty Pinecone results - 05/26/2026 09:5
 Commit 27: feat: enhance Recommender prompt engineering for B2B tone - 05/26/2026 09:58:10
 Commit 28: chore: clean up redundant logging statements in FastAPI - 05/26/2026 09:58:11
 Commit 29: feat: add CORS middleware for frontend communication - 05/26/2026 09:58:11
+Commit 30: refactor: extract Notifier logic into standalone service class - 05/26/2026 09:58:11
