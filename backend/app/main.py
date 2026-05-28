@@ -23,11 +23,19 @@ Base.metadata.create_all(bind=engine)
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Allows all origins
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+    expose_headers=["*"],
 )
+
+@app.middleware("http")
+async def add_ngrok_skip_header(request, call_next):
+    response = await call_next(request)
+    # Menambahkan header ini membantu dalam beberapa kasus CORS dengan ngrok
+    response.headers["ngrok-skip-browser-warning"] = "true"
+    return response
 
 # Include routers
 app.include_router(surveillance.router, prefix="/api/v1/surveillance", tags=["Surveillance"])

@@ -126,3 +126,18 @@ def get_all_tasks(limit: int = 50, db: Session = Depends(get_db)):
     """
     tasks = db.query(SurveillanceTask).order_by(SurveillanceTask.created_at.desc()).limit(limit).all()
     return tasks
+
+@router.delete("/task/{task_id}")
+def delete_task(task_id: int, db: Session = Depends(get_db)):
+    task = db.query(SurveillanceTask).filter(SurveillanceTask.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    db.delete(task)
+    db.commit()
+    return {"message": "Task deleted successfully"}
+
+@router.delete("/tasks")
+def clear_all_tasks(db: Session = Depends(get_db)):
+    db.query(SurveillanceTask).delete()
+    db.commit()
+    return {"message": "All tasks cleared successfully"}

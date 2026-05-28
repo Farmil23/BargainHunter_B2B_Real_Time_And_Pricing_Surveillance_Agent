@@ -1,0 +1,19 @@
+# Ngrok Configuration File
+# Dokumentasi: https://ngrok.com/docs/secure-tunnels/ngrok-agent/reference/config/
+
+# SILAKAN GANTI AUTHTOKEN DI BAWAH INI
+# Ambil dari: https://dashboard.ngrok.com/get-started/your-authtoken
+authtoken: 31Pxlm3KsieGl7rQLAagSu2hUo5_5m4CLpVDd12vfdvu9w4ou
+
+version: "2"
+tunnels:
+  frontend:
+    proto: http
+    addr: 5173
+    schemes:
+      - https
+  backend:
+    proto: http
+    addr: 8000
+    schemes:
+      - https
