@@ -1,6 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 
-const API_BASE_URL = "https://dcc2-2404-8000-1024-4b21-1fd-950c-b0f1-1ee9.ngrok-free.app/api/v1";
+const API_BASE_URL = "https://a791-2404-8000-1024-4b21-1fd-950c-b0f1-1ee9.ngrok-free.app/api/v1";
+
+// Fungsi helper dipisahkan di luar komponen agar tidak dibuat ulang tiap render
+const getPlatformTag = (url) => {
+  if (!url) return "Web";
+  const lowerUrl = url.toLowerCase();
+  if (lowerUrl.includes("amazon")) return "Amazon";
+  if (lowerUrl.includes("ebay")) return "eBay";
+  if (lowerUrl.includes("shopee")) return "Shopee";
+  if (lowerUrl.includes("tokopedia")) return "Tokopedia";
+  return "External";
+};
 
 const Dashboard = () => {
   // --- States ---
@@ -11,7 +22,7 @@ const Dashboard = () => {
   const [activeTasks, setActiveTasks] = useState([]);
   const [taskHistory, setTaskHistory] = useState([]);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
-  
+
   // UI & UX States
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
@@ -103,7 +114,7 @@ const Dashboard = () => {
 
   const renderProductGallery = (products) => {
     if (!products || products.length === 0) return "";
-    
+
     return `
       <div class="mt-8">
         <h4 class="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -138,10 +149,9 @@ const Dashboard = () => {
         const result = JSON.parse(task.result_data);
         const isMaintain = result.decision === 'MAINTAIN POSITION';
         const analysis = result.market_analysis || {};
-        
+
         content = `
           <div class="space-y-6">
-            <!-- Header Badge -->
             <div class="flex items-center gap-3">
               <div class="px-4 py-2 rounded-full border ${isMaintain ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'} text-[11px] font-bold uppercase tracking-widest flex items-center gap-2">
                 <i class="fa-solid ${isMaintain ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i>
@@ -150,7 +160,6 @@ const Dashboard = () => {
               <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Task ID: #${task.id}</span>
             </div>
 
-            <!-- Summary Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-sm">
                   <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-3">
@@ -180,7 +189,6 @@ const Dashboard = () => {
                </div>
             </div>
 
-            <!-- Recommendation Section -->
             <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-md relative overflow-hidden">
                <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50 -mr-16 -mt-16 rounded-full opacity-50"></div>
                <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 relative z-10">Strategic Action Path</h4>
@@ -189,7 +197,6 @@ const Dashboard = () => {
                </p>
             </div>
 
-            <!-- Extracted Products Gallery -->
             ${renderProductGallery(result.extracted_products)}
           </div>
         `;
@@ -251,7 +258,7 @@ const Dashboard = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/surveillance/analyze`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "ngrok-skip-browser-warning": "69420"
         },
@@ -275,7 +282,7 @@ const Dashboard = () => {
     e.stopPropagation();
     if (!confirm("Delete this record permanently?")) return;
     try {
-      await fetch(`${API_BASE_URL}/surveillance/task/${taskId}`, { 
+      await fetch(`${API_BASE_URL}/surveillance/task/${taskId}`, {
         method: "DELETE",
         headers: { "ngrok-skip-browser-warning": "69420" }
       });
@@ -287,7 +294,7 @@ const Dashboard = () => {
   const clearAllHistory = async () => {
     if (!confirm("Wipe all history?")) return;
     try {
-      await fetch(`${API_BASE_URL}/surveillance/tasks`, { 
+      await fetch(`${API_BASE_URL}/surveillance/tasks`, {
         method: "DELETE",
         headers: { "ngrok-skip-browser-warning": "69420" }
       });
@@ -297,7 +304,7 @@ const Dashboard = () => {
 
   const toggleBookmark = (taskId, e) => {
     e.stopPropagation();
-    setBookmarkedTasks(prev => 
+    setBookmarkedTasks(prev =>
       prev.includes(taskId) ? prev.filter(id => id !== taskId) : [...prev, taskId]
     );
   };
@@ -318,21 +325,6 @@ const Dashboard = () => {
     a.href = url; a.download = "bh_audit_export.json"; a.click();
   };
 
-  const importHistory = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const imported = JSON.parse(event.target.result);
-        setTaskHistory(imported);
-        alert("Import successful");
-      } catch { alert("Invalid File"); }
-    };
-    reader.readAsText(file);
-  };
-
-  // --- Report Actions ---
   const downloadReport = (task) => {
     const content = `Report ID: ${task.id}\nComponent: ${task.target_component}\nURL: ${task.target_url}\nData: ${task.result_data}`;
     const blob = new Blob([content], { type: "text/plain" });
@@ -345,14 +337,24 @@ const Dashboard = () => {
     alert("Copied to clipboard");
   };
 
-  const shareReport = (task) => {
-    navigator.clipboard.writeText(`Audit Result: ${task.target_component}`);
-    alert("Copied share text");
-  };
-
   const printReport = () => window.print();
 
   // --- Filtering & Sorting ---
+  const getStatusBadge = (task) => {
+    if (task.status !== 'completed') {
+      return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 text-[7px] font-black uppercase tracking-tighter border border-blue-100"><i class="fa-solid fa-sync fa-spin"></i> Syncing</span>`;
+    }
+    try {
+      const result = JSON.parse(task.result_data);
+      if (result.price_anomaly) {
+        return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-50 text-red-600 text-[7px] font-black uppercase tracking-tighter border border-red-100"><i class="fa-solid fa-triangle-exclamation"></i> Anomaly</span>`;
+      }
+      return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 text-[7px] font-black uppercase tracking-tighter border border-emerald-100"><i class="fa-solid fa-check"></i> Healthy</span>`;
+    } catch {
+      return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-50 text-slate-400 text-[7px] font-black uppercase tracking-tighter border border-slate-200"><i class="fa-solid fa-file-lines"></i> Report</span>`;
+    }
+  };
+
   const filteredHistory = taskHistory
     .filter((task) => {
       const matchesSearch = task.target_component.toLowerCase().includes(searchQuery.toLowerCase());
@@ -374,14 +376,14 @@ const Dashboard = () => {
 
   return (
     <div className="flex h-screen bg-white text-slate-800 font-sans overflow-hidden">
-      
+
       {/* ── SIDEBAR ── */}
       {isSidebarOpen && (
         <div className="fixed inset-0 bg-slate-900/40 z-40 lg:hidden backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)}></div>
       )}
 
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-72 bg-slate-50 border-r border-slate-200 flex flex-col transition-transform duration-300 
+        fixed inset-y-0 left-0 z-50 w-80 bg-slate-50 border-r border-slate-200 flex flex-col transition-transform duration-300 
         ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
         lg:relative lg:translate-x-0
       `}>
@@ -408,7 +410,7 @@ const Dashboard = () => {
         <div className="px-4 pb-4 space-y-2 border-b border-slate-200">
           <div className="relative group">
             <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-            <input 
+            <input
               type="text" placeholder="Search history..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 ring-blue-50 focus:border-blue-300 outline-none transition-all"
             />
@@ -420,44 +422,63 @@ const Dashboard = () => {
               <option value="bookmarked">Bookmarked</option>
             </select>
             <button onClick={handlePullToRefresh} className={`px-3 border border-slate-200 rounded-xl bg-white hover:bg-slate-50 ${isRefreshing ? 'animate-spin' : ''}`}>
-               <i className="fa-solid fa-rotate-right text-[10px] text-slate-500"></i>
+              <i className="fa-solid fa-rotate-right text-[10px] text-slate-500"></i>
             </button>
           </div>
         </div>
 
-        {/* List */}
+        {/* List History */}
         <div className="flex-1 overflow-y-auto px-2 py-4 space-y-1">
           {isHistoryLoading && taskHistory.length === 0 ? (
             Array(5).fill(0).map((_, i) => <div key={i} className="h-14 w-full bg-slate-200 animate-pulse rounded-2xl mb-2"></div>)
-          ) : filteredHistory.map((task) => (
-            <div 
-              key={task.id} onClick={() => handleTaskClick(task)}
-              className={`group flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer transition-all ${
-                selectedTaskId === task.id ? 'bg-white shadow-md border border-slate-200 ring-2 ring-blue-50' : 'hover:bg-slate-200/50'
-              }`}
-            >
-              <div className={`w-2 h-2 rounded-full ${task.status === 'completed' ? 'bg-emerald-500' : task.status === 'failed' ? 'bg-red-500' : 'bg-blue-500 animate-pulse'}`}></div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-slate-900 truncate">${highlightText(task.target_component)}</p>
-                <p className="text-[10px] font-medium text-slate-400 uppercase">${new Date(task.created_at).toLocaleDateString()}</p>
+          ) : filteredHistory.map((task) => {
+            const platform = getPlatformTag(task.target_url);
+
+            return (
+              <div
+                key={task.id}
+                onClick={() => handleTaskClick(task)}
+                // Menambahkan detail text tooltip bawaan saat kursor diarahkan ke komponen ini
+                title={`Component: ${task.target_component}\nURL: ${task.target_url}\nDate: ${new Date(task.created_at).toLocaleString()}`}
+                className={`group mx-2 flex flex-col gap-1.5 px-3 py-3 rounded-xl cursor-pointer transition-all border ${selectedTaskId === task.id ? 'bg-white shadow-md border-blue-200 ring-2 ring-blue-50' : 'border-transparent hover:bg-slate-200/40'
+                  }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${task.status === 'completed' ? 'bg-emerald-500' : task.status === 'failed' ? 'bg-red-500' : 'bg-blue-500 animate-pulse'}`}></div>
+                  <p className="flex-1 text-[11px] font-bold text-slate-800 truncate uppercase tracking-tight">{highlightText(task.target_component)}</p>
+                  <div dangerouslySetInnerHTML={{ __html: getStatusBadge(task) }} />
+                </div>
+
+                <div className="flex items-center justify-between pl-3">
+                  <div className="flex items-center gap-1.5 text-slate-400">
+                    <i className="fa-solid fa-calendar-day text-[8px]"></i>
+                    <span className="text-[8px] font-black uppercase tracking-widest">{new Date(task.created_at).toLocaleDateString()}</span>
+                  </div>
+
+                  {/* Komponen Badge Tag Platform */}
+                  <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider border ${platform === 'Amazon'
+                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                      : platform === 'External'
+                        ? 'bg-slate-100 text-slate-600 border-slate-200'
+                        : 'bg-blue-50 text-blue-700 border-blue-200'
+                    }`}>
+                    {platform}
+                  </span>
+                </div>
               </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100">
-                 {/* <button onClick={(e) => editTaskName(task.id, e)} className="p-1 text-slate-400 hover:text-blue-600"><i className="fa-solid fa-pen text-[10px]"></i></button> */}
-                 <button onClick={(e) => deleteTask(task.id, e)} className="p-1 text-slate-400 hover:text-red-600"><i className="fa-solid fa-trash-can text-[10px]"></i></button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Footer */}
         <div className="p-4 border-t border-slate-200 bg-white">
-           <button onClick={clearAllHistory} className="w-full py-2.5 text-[10px] font-bold text-slate-400 hover:text-red-600 uppercase tracking-widest transition-colors">Clear History</button>
+          <button onClick={clearAllHistory} className="w-full py-2.5 text-[10px] font-bold text-slate-400 hover:text-red-600 uppercase tracking-widest transition-colors">Clear History</button>
         </div>
       </aside>
 
       {/* ── MAIN ── */}
       <main className="flex-1 flex flex-col relative bg-white">
-        
+
         {/* Header */}
         <header className="h-20 border-b border-slate-100 flex items-center px-8 md:px-12 justify-between shrink-0">
           <div className="flex items-center gap-6">
@@ -470,60 +491,71 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="hidden sm:flex items-center gap-2">
-             {selectedTaskId && (
-               <>
-                 <button onClick={() => downloadReport(taskHistory.find(t => t.id === selectedTaskId))} className="w-10 h-10 rounded-xl hover:bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-all"><i className="fa-solid fa-download"></i></button>
-                 <button onClick={printReport} className="w-10 h-10 rounded-xl hover:bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-all"><i className="fa-solid fa-print"></i></button>
-                 <button onClick={() => copyReport(taskHistory.find(t => t.id === selectedTaskId))} className="w-10 h-10 rounded-xl hover:bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-all"><i className="fa-solid fa-copy"></i></button>
-               </>
-             )}
+            {selectedTaskId && (
+              <>
+                <button onClick={() => downloadReport(taskHistory.find(t => t.id === selectedTaskId))} className="w-10 h-10 rounded-xl hover:bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-all"><i className="fa-solid fa-download"></i></button>
+                <button onClick={printReport} className="w-10 h-10 rounded-xl hover:bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-all"><i className="fa-solid fa-print"></i></button>
+                <button onClick={() => copyReport(taskHistory.find(t => t.id === selectedTaskId))} className="w-10 h-10 rounded-xl hover:bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-all"><i className="fa-solid fa-copy"></i></button>
+              </>
+            )}
           </div>
         </header>
 
         {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto pt-10 pb-48 scroll-smooth">
-          <div className="max-w-4xl mx-auto px-6 md:px-12">
+        <div className="flex-1 overflow-y-auto pt-8 pb-40 scroll-smooth bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]">
+          <div className="max-w-3xl mx-auto px-6">
             {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mb-8 shadow-xl shadow-blue-500/10">
-                  <i className="fa-solid fa-robot text-3xl"></i>
+              <div className="flex flex-col items-center justify-center py-10 text-center animate-fade-in">
+                <div className="w-14 h-14 bg-white shadow-md border border-slate-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
+                  <i className="fa-solid fa-robot text-xl"></i>
                 </div>
-                <h3 className="text-3xl font-bold text-slate-900 mb-4 tracking-tight">Deploy Surveillance Agents</h3>
-                <p className="text-slate-500 font-medium max-w-sm mx-auto text-sm leading-relaxed mb-10">Enter a target marketplace URL and component name to execute an automated audit workflow.</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg">
-                   <div className="p-6 bg-slate-50 rounded-2xl text-left border border-slate-200 shadow-sm">
-                      <i className="fa-solid fa-magnifying-glass-chart text-blue-600 mb-3 block text-xl"></i>
-                      <p class="font-bold text-slate-900 text-sm mb-1 uppercase tracking-tight">Price Monitoring</p>
-                      <p class="text-[11px] text-slate-500 leading-relaxed">Real-time tracking of competitive pricing and stock levels.</p>
-                   </div>
-                   <div className="p-6 bg-slate-50 rounded-2xl text-left border border-slate-200 shadow-sm">
-                      <i className="fa-solid fa-shield-check text-emerald-600 mb-3 block text-xl"></i>
-                      <p class="font-bold text-slate-900 text-sm mb-1 uppercase tracking-tight">Compliance Guard</p>
-                      <p class="text-[11px] text-slate-500 leading-relaxed">Ensuring marketplace pricing stays within defined B2B margins.</p>
-                   </div>
+
+                {/* Amazon Disclaimer */}
+                <div className="mb-8 p-4 bg-white/80 backdrop-blur-sm border border-amber-200 rounded-xl max-w-md mx-auto flex items-center gap-3 text-left shadow-sm">
+                  <div className="w-8 h-8 shrink-0 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center">
+                    <i className="fa-brands fa-amazon text-sm"></i>
+                  </div>
+                  <div>
+                    <h4 className="text-[10px] font-black text-amber-800 uppercase tracking-widest">Optimized for Amazon</h4>
+                    <p className="text-[11px] text-amber-700 leading-tight font-medium">Use Amazon.com product URLs for maximum data structural integrity.</p>
+                  </div>
+                </div>
+
+                <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">Deploy Surveillance</h3>
+                <p className="text-slate-500 font-medium max-w-sm mx-auto text-xs leading-relaxed mb-8">Enter target parameters to execute an automated audit workflow.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md">
+                  <div className="p-4 bg-white rounded-xl text-left border border-slate-100 shadow-sm hover:border-blue-200 transition-colors">
+                    <i className="fa-solid fa-magnifying-glass-chart text-blue-600 mb-2 block text-sm"></i>
+                    <p className="font-bold text-slate-900 text-[11px] uppercase tracking-tight">Monitoring</p>
+                    <p className="text-[10px] text-slate-400 leading-tight">Track competitive pricing and stock levels.</p>
+                  </div>
+                  <div className="p-4 bg-white rounded-xl text-left border border-slate-100 shadow-sm hover:border-emerald-200 transition-colors">
+                    <i className="fa-solid fa-shield-check text-emerald-600 mb-2 block text-sm"></i>
+                    <p className="font-bold text-slate-900 text-[11px] uppercase tracking-tight">Guard</p>
+                    <p className="text-[10px] text-slate-400 leading-tight">Ensure pricing stays within B2B margins.</p>
+                  </div>
                 </div>
               </div>
             ) : (
               messages.map((msg, index) => (
                 <div key={index} className="mb-12 animate-slide-up group">
                   <div className="flex items-start gap-6">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg ${
-                      msg.role === 'user' ? 'bg-white text-slate-900 border border-slate-200' : 'bg-blue-600 text-white'
-                    }`}>
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg ${msg.role === 'user' ? 'bg-white text-slate-900 border border-slate-200' : 'bg-blue-600 text-white'
+                      }`}>
                       <i className={`fa-solid ${msg.role === 'user' ? 'fa-user' : 'fa-bolt-lightning'}`}></i>
                     </div>
-                    <div className="flex-1 pt-2">
+                    <div className="flex-1 pt-2 min-w-0">
                       <div className="flex items-center justify-between mb-4">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{msg.role === 'user' ? 'Operator Command' : 'Audit Intelligence Report'}</span>
                         {msg.role === 'assistant' && msg.task && (
-                           <div className="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={(e) => toggleBookmark(msg.task.id, e)} className={`text-[10px] font-bold uppercase transition-colors ${bookmarkedTasks.includes(msg.task.id) ? 'text-blue-600' : 'text-slate-400 hover:text-blue-600'}`}>
-                                 {bookmarkedTasks.includes(msg.task.id) ? 'Saved' : 'Save'}
-                              </button>
-                              <button onClick={() => copyReport(msg.task)} className="text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase transition-colors">Copy Data</button>
-                           </div>
+                          <div className="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={(e) => toggleBookmark(msg.task.id, e)} className={`text-[10px] font-bold uppercase transition-colors ${bookmarkedTasks.includes(msg.task.id) ? 'text-blue-600' : 'text-slate-400 hover:text-blue-600'}`}>
+                              {bookmarkedTasks.includes(msg.task.id) ? 'Saved' : 'Save'}
+                            </button>
+                            <button onClick={() => copyReport(msg.task)} className="text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase transition-colors">Copy Data</button>
+                          </div>
                         )}
                       </div>
                       <div className="text-base text-slate-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: msg.content }} />
@@ -536,8 +568,8 @@ const Dashboard = () => {
         </div>
 
         {/* Input Bar */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 bg-gradient-to-t from-white via-white/80 to-transparent">
-          <div className="max-w-4xl mx-auto">
+        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none">
+          <div className="max-w-4xl mx-auto pointer-events-auto">
             <form onSubmit={handleChatSubmit} className="relative">
               <div className="flex flex-col md:flex-row gap-3 bg-white border border-slate-200 rounded-[2rem] p-4 shadow-2xl focus-within:ring-4 ring-blue-50 transition-all">
                 <div className="flex-[2] flex items-center px-4">
@@ -546,7 +578,7 @@ const Dashboard = () => {
                 </div>
                 <div className="hidden md:block w-px bg-slate-100 h-10 self-center"></div>
                 <div className="flex-1 flex items-center px-4">
-                  <i className="fa-solid fa-microchip text-slate-300 mr-4"></i>
+                  <i className="fa-solid fa-tags text-slate-300 mr-4"></i>
                   <input type="text" value={targetComponent} onChange={(e) => setTargetComponent(e.target.value)} placeholder="Component Name..." className="w-full py-3 bg-transparent text-sm font-bold focus:outline-none placeholder:text-slate-300" />
                 </div>
                 <button
