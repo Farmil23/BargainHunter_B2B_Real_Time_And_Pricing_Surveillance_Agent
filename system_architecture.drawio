@@ -1,0 +1,156 @@
+<mxfile host="Electron" modified="2026-05-30T15:15:00.000Z" agent="Mozilla/5.0" version="21.6.8" type="device">
+  <diagram id="SupplyChainArchitecture" name="System Architecture">
+    <mxGraphModel dx="1434" dy="836" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- SWIMLANE 1: WEB SCRAPING -->
+        <mxCell id="lane1" value="WEB SCRAPING" style="swimlane;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;startSize=40;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="80" y="80" width="200" height="480" as="geometry" />
+        </mxCell>
+        <mxCell id="n1_urls" value="Target URLs" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane1">
+          <mxGeometry x="40" y="80" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n1_req" value="Request Management" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane1">
+          <mxGeometry x="40" y="160" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n1_parse" value="HTML Parser" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane1">
+          <mxGeometry x="40" y="240" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n1_meta" value="Metadata Extraction" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane1">
+          <mxGeometry x="40" y="320" width="120" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- EDGES IN LANE 1 -->
+        <mxCell id="e1_1" edge="1" parent="lane1" source="n1_urls" target="n1_req">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_2" edge="1" parent="lane1" source="n1_req" target="n1_parse">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_3" edge="1" parent="lane1" source="n1_parse" target="n1_meta">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- SWIMLANE 2: DATA PROCESSING -->
+        <mxCell id="lane2" value="DATA PROCESSING" style="swimlane;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;startSize=40;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="340" y="80" width="200" height="480" as="geometry" />
+        </mxCell>
+        <mxCell id="n2_dedup" value="Deduplication" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane2">
+          <mxGeometry x="40" y="80" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n2_clean" value="Cleaning (NLP Prep)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane2">
+          <mxGeometry x="40" y="160" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n2_token" value="Tokenization" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane2">
+          <mxGeometry x="40" y="240" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n2_store" value="Batch Storage" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" vertex="1" parent="lane2">
+          <mxGeometry x="50" y="320" width="100" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- EDGES IN LANE 2 -->
+        <mxCell id="e2_1" edge="1" parent="lane2" source="n2_dedup" target="n2_clean">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2_2" edge="1" parent="lane2" source="n2_clean" target="n2_token">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2_3" edge="1" parent="lane2" source="n2_token" target="n2_store">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- CROSS LANE EDGE 1 -->
+        <mxCell id="edge_c1" value="Filtered Text Data" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="lane1" target="n2_dedup">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="280" y="180" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- SWIMLANE 3: AI SENTIMENT ANALYSIS -->
+        <mxCell id="lane3" value="AI SENTIMENT ANALYSIS" style="swimlane;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;startSize=40;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="600" y="80" width="220" height="480" as="geometry" />
+        </mxCell>
+        <mxCell id="n3_llm" value="Deep Learning Model&#xa;(LLM)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane3">
+          <mxGeometry x="50" y="80" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n3_feat" value="Feature Extraction" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane3">
+          <mxGeometry x="50" y="160" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n3_class" value="Sentiment Classifier" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane3">
+          <mxGeometry x="50" y="240" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n3_score" value="Confidence Score" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane3">
+          <mxGeometry x="50" y="320" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n3_map" value="Polarity Map" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane3">
+          <mxGeometry x="50" y="400" width="120" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- EDGES IN LANE 3 -->
+        <mxCell id="e3_1" edge="1" parent="lane3" source="n3_llm" target="n3_feat">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3_2" edge="1" parent="lane3" source="n3_feat" target="n3_class">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3_3" edge="1" parent="lane3" source="n3_class" target="n3_score">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3_4" edge="1" parent="lane3" source="n3_score" target="n3_map">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- CROSS LANE EDGE 2 -->
+        <mxCell id="edge_c2" value="Processed Batches" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="n2_store" target="n3_llm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- SWIMLANE 4: DECISION CHECKPOINT -->
+        <mxCell id="lane4" value="DECISION CHECKPOINT" style="swimlane;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;startSize=40;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="880" y="80" width="220" height="480" as="geometry" />
+        </mxCell>
+        <mxCell id="n4_dec" value="Sentiment&#xa;Threshold Check" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="lane4">
+          <mxGeometry x="35" y="160" width="150" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="n4_pos" value="Positive Action" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="lane4">
+          <mxGeometry x="100" y="60" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n4_neg" value="Negative Action" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="lane4">
+          <mxGeometry x="100" y="380" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n4_neu" value="Neutral Log" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="lane4">
+          <mxGeometry x="10" y="60" width="80" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- EDGES IN LANE 4 -->
+        <mxCell id="e4_1" value="Pass" edge="1" parent="lane4" source="n4_dec" target="n4_pos">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4_2" value="Fail" edge="1" parent="lane4" source="n4_dec" target="n4_neg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4_3" value="Skip" edge="1" parent="lane4" source="n4_dec" target="n4_neu">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- CROSS LANE EDGE 3 -->
+        <mxCell id="edge_c3" value="Analyzed Scores" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="n3_class" target="n4_dec">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- REVISE STRATEGY LOOP EDGE -->
+        <mxCell id="edge_c4" value="Revise Strategy" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#b85450;" edge="1" parent="1" source="n4_neg" target="lane3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="860" y="480" />
+              <mxPoint x="860" y="600" />
+              <mxPoint x="710" y="600" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
