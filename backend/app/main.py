@@ -6,7 +6,7 @@ from backend.app.core.config import settings
 from backend.app.api.routes import surveillance
 from backend.app.db.session import engine, Base
 from backend.app.models import domain
-
+from backend.app.services.scheduler import start_scheduler, stop_scheduler
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -19,6 +19,14 @@ app = FastAPI(
 
 # Auto-create database tables (Hibernate auto-update equivalent)
 Base.metadata.create_all(bind=engine)
+
+@app.on_event("startup")
+def on_startup():
+    start_scheduler()
+
+@app.on_event("shutdown")
+def on_shutdown():
+    stop_scheduler()
 
 # CORS middleware
 app.add_middleware(
