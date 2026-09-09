@@ -1,12 +1,18 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 import logging
+
+from fastapi.responses import StreamingResponse
+import io
 
 from backend.app.core.config import settings
 from backend.app.api.routes import surveillance
 from backend.app.db.session import engine, Base
 from backend.app.models import domain
 from backend.app.services.scheduler import start_scheduler, stop_scheduler
+from backend.app.agents.workflows import surveillance_app
+
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -51,3 +57,19 @@ app.include_router(surveillance.router, prefix="/api/v1/surveillance", tags=["Su
 @app.get("/health")
 def health_check():
     return {"status": "ok", "project": settings.PROJECT_NAME}
+
+@app.get("/graph", response_class=Response)
+async def get_graph_image():
+    """
+    Endpoint untuk mengambil gambar visualisasi LangGraph dalam format PNG.
+    """
+    try:
+        # 1. Ambil biner gambar PNG dari LangGraph
+        # Pastikan 'langgraph_app' adalah graf yang sudah di-compile (workflow.compile())
+        png_bytes = surveillance_app.get_graph().draw_mermaid_png()
+        
+        # 2. Kembalikan sebagai respon gambar PNG
+        return Response(content=png_bytes, media_type="image/png")
+        
+    except Exception as e:
+        return {"error": f"Gagal membuat gambar graf: {str(e)}"}
